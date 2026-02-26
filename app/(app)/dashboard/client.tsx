@@ -7,6 +7,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { LanguageSelector } from '@/app/components/LanguageSelector';
 import { VOICE_CATEGORIES, VOICES_V3, type VoiceCategory } from '@/lib/sarvam';
 import Image from 'next/image';
+import { Rocket, BookOpen, Briefcase, Mic, Clock, Settings, Star, LogOut, Menu, Film, Zap, Globe, Download, Trash2, Play, Pause } from 'lucide-react';
+
+const CATEGORY_ICONS: Record<string, any> = {
+  Rocket,
+  BookOpen,
+  Briefcase
+};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Tab = 'generate' | 'history' | 'settings';
@@ -118,7 +125,7 @@ function UsageBar({ used, total, label, unlimited = false }: { used: number; tot
 }
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
-function StatCard({ icon, value, label, color }: { icon: string; value: string; label: string; color: string }) {
+function StatCard({ icon, value, label, color }: { icon: React.ReactNode; value: string; label: string; color: string }) {
   return (
     <div className="bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-4 flex items-center gap-3">
       <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
@@ -191,8 +198,8 @@ function HistoryRow({ item, onPlay, onDelete }: { item: HistoryItem; onPlay: (id
         title={!item.audioUrl ? "Audio not available" : playing ? "Pause" : "Play"}
       >
         {playing
-          ? <div className="w-2.5 h-2.5 bg-white rounded-sm" />
-          : <svg className="w-3 h-3 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z" /></svg>
+          ? <Pause className="w-4 h-4 text-white ml-0.5" />
+          : <Play className="w-4 h-4 text-white ml-0.5" fill="currentColor" />
         }
       </button>
 
@@ -239,19 +246,13 @@ function HistoryRow({ item, onPlay, onDelete }: { item: HistoryItem; onPlay: (id
                   console.error('Download failed', e);
                 }
               }}
-              className="w-8 h-8 rounded-lg bg-[#242424] flex items-center justify-center hover:bg-[#2e2e2e] transition-colors"
+              className="w-8 h-8 rounded-lg bg-[#242424] flex items-center justify-center hover:bg-[#2e2e2e] transition-colors group/dl"
               title="Download Audio"
             >
-              <svg className="w-4 h-4 text-[#8b8680]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
+              <Download className="w-4 h-4 text-[#8b8680] group-hover/dl:text-[#f0eeea] transition-colors" />
             </button>
             <button onClick={() => onDelete(item.id)} className="w-8 h-8 rounded-lg bg-[#242424] flex items-center justify-center hover:bg-[#ef4444]/20 hover:text-[#ef4444] text-[#8b8680] transition-colors" title="Delete Audio">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-              </svg>
+              <Trash2 className="w-4 h-4" />
             </button>
           </div>
         )}
@@ -545,9 +546,12 @@ function GeneratorPanel({ onGenerationComplete, subscriptionTier = 'free' }: { o
 
     setPreviewVoiceId(v.id);
 
-    // If we already generated a preview for this guy, just play it!
-    if (previewCache[v.id]) {
-      const audio = new Audio(previewCache[v.id]);
+    // Unique cache key per voice AND language so switching to Marathi doesn't play cached English
+    const cacheKey = `${v.id}-${language}`;
+
+    // If we already generated a preview for this guy + language combo, just play it!
+    if (previewCache[cacheKey]) {
+      const audio = new Audio(previewCache[cacheKey]);
       previewAudioRef.current = audio;
       audio.onended = () => setPreviewVoiceId(null);
       audio.play();
@@ -555,19 +559,29 @@ function GeneratorPanel({ onGenerationComplete, subscriptionTier = 'free' }: { o
     }
 
     try {
-      const funScripts = [
-        `Hey there! I'm ${v.name}. Let's make an awesome reel together!`,
-        `Hi! I'm ${v.name}, and I'm ready to bring your words to life.`,
-        `Greetings! ${v.name} here. Trust me, your script is in good hands.`
-      ];
-      const randomScript = funScripts[Math.floor(Math.random() * funScripts.length)];
+      const LOCALIZED_SCRIPTS: Record<string, string> = {
+        english: "I am your new solution for voice over voxly.",
+        hindi: "मैं वॉयस ओवर वॉक्सली के लिए आपका नया समाधान हूं।",
+        hinglish: "Main voice over Voxly ke liye aapka naya solution hoon.",
+        bengali: "আমি ভয়েস ওভার ভক্সলির জন্য আপনার নতুন সমাধান।",
+        tamil: "வாய்ஸ் ஓவர் வாக்ஸ்லிக்கான உங்களின் புதிய தீர்வு நான்.",
+        telugu: "నేను వాయిస్ ఓవర్ వోక్స్లీ కోసం మీ కొత్త పరిష్కారాన్ని।",
+        marathi: "मी व्हॉईस ओव्हर वॉक्सलीसाठी तुमचे नवीन समाधान आहे।",
+        gujarati: "હું વોઈસ ઓવર વોક્સલી માટે તમારો નવો ઉકેલ છું।",
+        kannada: "ನಾನು ವಾಯ್ಸ್ ಓವರ್ ವೋಕ್ಸ್ಲಿಗಾಗಿ ನಿಮ್ಮ ಹೊಸ ಪರಿಹಾರವಾಗಿದೆ।",
+        malayalam: "വോയ്‌സ് ഓവർ വോക്‌സ്‌ലിക്കായുള്ള നിങ്ങളുടെ പുതിയ പരിഹാരമാണ് ഞാൻ.",
+        punjabi: "ਮੈਂ ਵੌਇਸ ਓਵਰ ਵੌਕਸਲੀ ਲਈ ਤੁਹਾਡਾ ਨਵਾਂ ਹੱਲ ਹਾਂ।",
+        odia: "ମୁଁ ଭଏସ୍ ଓଭର ଭକ୍ସଲି ପାଇଁ ଆପଣଙ୍ଗର ନୂତନ ସମାଧାନ |",
+      };
+
+      const script = LOCALIZED_SCRIPTS[language.toLowerCase()] || LOCALIZED_SCRIPTS.english;
 
       const res = await fetch('/api/tts/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          script: randomScript,
-          language: 'english', // Use English for the preview snippet to ensure accuracy across names
+          script,
+          language: language.toLowerCase(), // Use the currently selected language
           voiceId: v.id,
           model: 'bulbul:v3'
         }),
@@ -583,7 +597,7 @@ function GeneratorPanel({ onGenerationComplete, subscriptionTier = 'free' }: { o
       const audioUrl = URL.createObjectURL(blob);
 
       // Cache it
-      setPreviewCache(prev => ({ ...prev, [v.id]: audioUrl }));
+      setPreviewCache(prev => ({ ...prev, [cacheKey]: audioUrl }));
 
       // Double check if user hasn't clicked another play button while loading
       setPreviewVoiceId(currentId => {
@@ -699,7 +713,12 @@ function GeneratorPanel({ onGenerationComplete, subscriptionTier = 'free' }: { o
                       </svg>
                     </div>
                   )}
-                  <span className="text-3xl">{cat.icon}</span>
+                  <span className="text-3xl flex items-center justify-center">
+                    {(() => {
+                      const Icon = CATEGORY_ICONS[cat.icon as string];
+                      return Icon ? <Icon size={32} strokeWidth={1.5} /> : cat.icon;
+                    })()}
+                  </span>
                   <div>
                     <p className="text-xs font-bold text-[#f0eeea] mb-0.5">{cat.name}</p>
                     <p className="text-[10px] text-[#5a5652] leading-tight">{cat.description}</p>
@@ -732,9 +751,12 @@ function GeneratorPanel({ onGenerationComplete, subscriptionTier = 'free' }: { o
             <div>
               <h3 className="text-sm font-semibold text-[#f0eeea] mb-1">Choose Voice</h3>
               <p className="text-xs text-[#5a5652]">
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full mr-1"
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full mr-1 flex items-center gap-1 w-max"
                   style={{ background: `${categoryMeta?.color}18`, color: categoryMeta?.color }}>
-                  {categoryMeta?.icon} {categoryMeta?.name}
+                  {(() => {
+                    const Icon = CATEGORY_ICONS[categoryMeta?.icon as string];
+                    return Icon ? <Icon size={12} strokeWidth={2} /> : categoryMeta?.icon;
+                  })()} {categoryMeta?.name}
                 </span>
                 — pick your speaker
               </p>
@@ -1211,20 +1233,20 @@ export default function DashboardClient(props: DashboardClientProps) {
           <NavItem
             active={activeTab === 'generate'}
             onClick={() => { setActiveTab('generate'); setSidebarOpen(false); }}
-            icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>}
+            icon={<Mic className="w-4 h-4" />}
             label="Generate"
           />
           <NavItem
             active={activeTab === 'history'}
             onClick={() => { setActiveTab('history'); setSidebarOpen(false); }}
             badge={history.length}
-            icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>}
+            icon={<Clock className="w-4 h-4" />}
             label="History"
           />
           <NavItem
             active={activeTab === 'settings'}
             onClick={() => { setActiveTab('settings'); setSidebarOpen(false); }}
-            icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19.07 4.93A10 10 0 0 1 21 12a10 10 0 0 1-1.93 7.07M4.93 19.07A10 10 0 0 1 3 12a10 10 0 0 1 1.93-7.07" /></svg>}
+            icon={<Settings className="w-4 h-4" />}
             label="Settings"
           />
         </nav>
@@ -1245,7 +1267,7 @@ export default function DashboardClient(props: DashboardClientProps) {
             ">
               <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] skew-x-12"></div>
               <span className="relative z-10 flex items-center justify-center gap-1.5 drop-shadow-md text-white mix-blend-normal">
-                <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                <Star className="w-3.5 h-3.5 text-white" fill="currentColor" />
                 UPGRADE TO PRO
               </span>
             </Link>
@@ -1258,7 +1280,7 @@ export default function DashboardClient(props: DashboardClientProps) {
             ">
               <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] skew-x-12"></div>
               <span className="relative z-10 flex items-center justify-center gap-1.5">
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                <Star className="w-3.5 h-3.5 text-white" fill="currentColor" />
                 Go Pro — Unlimited
               </span>
             </Link>
@@ -1268,7 +1290,10 @@ export default function DashboardClient(props: DashboardClientProps) {
         {/* User row */}
         <div className="px-4 py-4 border-t border-[#2e2e2e] flex items-center gap-3 flex-shrink-0">
           {session?.user?.image ? (
-            <img src={session.user.image} alt="" className="w-8 h-8 rounded-full flex-shrink-0 border border-[#2e2e2e]" />
+            <div className="relative w-8 h-8 rounded-full flex-shrink-0 border border-[#2e2e2e] flex items-center justify-center text-white font-bold text-sm bg-gradient-to-br from-[#f472b6] to-[#fb923c] overflow-hidden">
+              <span>{userInitial}</span>
+              <img src={session.user.image} alt="" className="absolute inset-0 w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />
+            </div>
           ) : (
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
               style={{ background: 'linear-gradient(135deg, #f472b6, #fb923c)' }}>
@@ -1286,9 +1311,7 @@ export default function DashboardClient(props: DashboardClientProps) {
             className="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-lg text-[#5a5652] hover:text-[#f0eeea] hover:bg-[#242424] transition-all duration-200"
             title="Sign out"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
+            <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>
       </aside>
@@ -1308,9 +1331,7 @@ export default function DashboardClient(props: DashboardClientProps) {
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg text-[#8b8680] hover:text-white hover:bg-[#1a1a1a] transition-all"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
+            <Menu className="w-4 h-4" />
           </button>
 
           {/* Breadcrumb / Mobile Logo */}
@@ -1332,10 +1353,11 @@ export default function DashboardClient(props: DashboardClientProps) {
             {session?.user?.image ? (
               <button
                 onClick={() => setActiveTab('settings')}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm transition-all hover:scale-105 overflow-hidden border border-[#2e2e2e]"
-                style={{ boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}
+                className="relative w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm transition-all hover:scale-105 overflow-hidden border border-[#2e2e2e]"
+                style={{ background: 'linear-gradient(135deg, #f472b6, #fb923c)', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}
               >
-                <img src={session.user.image} alt="Profile" className="w-full h-full object-cover" />
+                <span>{userInitial}</span>
+                <img src={session.user.image} alt="Profile" className="absolute inset-0 w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />
               </button>
             ) : (
               <button
@@ -1376,10 +1398,10 @@ export default function DashboardClient(props: DashboardClientProps) {
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-[#5a5652] mb-3">Your stats</p>
                     <div className="grid grid-cols-2 gap-2">
-                      <StatCard icon="🎬" value={totalGenerations.toString()} label="Generated" color="#f472b6" />
-                      <StatCard icon="⚡" value="< 10s" label="Avg time" color="#fb923c" />
-                      <StatCard icon="🌐" value={uniqueLanguages.toString()} label="Languages" color="#8b5cf6" />
-                      <StatCard icon="⭐" value={isPro ? 'Pro' : isCreator ? 'Creator' : 'Free'} label="Plan" color="#22c55e" />
+                      <StatCard icon={<Film className="w-4 h-4 text-[#f472b6]" />} value={totalGenerations.toString()} label="Generated" color="#f472b6" />
+                      <StatCard icon={<Zap className="w-4 h-4 text-[#fb923c]" />} value="< 10s" label="Avg time" color="#fb923c" />
+                      <StatCard icon={<Globe className="w-4 h-4 text-[#8b5cf6]" />} value={uniqueLanguages.toString()} label="Languages" color="#8b5cf6" />
+                      <StatCard icon={<Star className="w-4 h-4 text-[#22c55e]" fill="currentColor" />} value={isPro ? 'Pro' : isCreator ? 'Creator' : 'Free'} label="Plan" color="#22c55e" />
                     </div>
                   </div>
 
@@ -1403,7 +1425,9 @@ export default function DashboardClient(props: DashboardClientProps) {
                     <div className="bg-[#141414] border border-[#2e2e2e] rounded-2xl overflow-hidden">
                       {history.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-8 px-4 text-center gap-2">
-                          <div className="w-10 h-10 rounded-full bg-[#1a1a1a] border border-[#2e2e2e] flex items-center justify-center text-lg mb-1">🎙️</div>
+                          <div className="w-10 h-10 rounded-full bg-[#1a1a1a] border border-[#2e2e2e] flex items-center justify-center mb-1">
+                            <Mic className="w-5 h-5 text-[#8b8680]" />
+                          </div>
                           <p className="text-sm font-medium text-[#5a5652]">No voiceovers yet</p>
                           <p className="text-xs text-[#3a3a3a]">Generate your first one on the left!</p>
                         </div>
@@ -1420,7 +1444,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                               <div key={item.id} className={`flex items-center gap-3 px-4 py-3 hover:bg-[#1a1a1a] transition-colors group ${i === 0 ? 'bg-[#161616]' : ''}`}>
                                 {/* Play dot */}
                                 <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center" style={{ background: `${dotColor}18`, border: `1px solid ${dotColor}30` }}>
-                                  <svg className="w-2.5 h-2.5" fill={dotColor} viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z" /></svg>
+                                  <Play className="w-2.5 h-2.5" fill={dotColor} color={dotColor} strokeWidth={0} />
                                 </div>
 
                                 {/* Info */}
@@ -1453,9 +1477,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                                       className="w-7 h-7 rounded-lg bg-[#242424] flex items-center justify-center hover:bg-[#2e2e2e] transition-colors"
                                       title="Download"
                                     >
-                                      <svg className="w-3.5 h-3.5 text-[#8b8680]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-                                      </svg>
+                                      <Download className="w-3.5 h-3.5 text-[#8b8680]" />
                                     </button>
                                   )}
                                   <button
@@ -1463,9 +1485,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                                     className="w-7 h-7 rounded-lg bg-[#242424] flex items-center justify-center hover:bg-[#ef4444]/15 hover:text-[#ef4444] text-[#8b8680] transition-colors"
                                     title="Delete"
                                   >
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                    </svg>
+                                    <Trash2 className="w-3.5 h-3.5" />
                                   </button>
                                 </div>
                               </div>

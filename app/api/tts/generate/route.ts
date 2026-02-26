@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = session.user.id;
-    const { script, voiceId, language, model, pace, pitch, loudness } = await req.json();
+    const { script, voiceId, language, model } = await req.json();
 
     // Map language to target_language_code expected by Sarvam AI
     const languageMap: Record<string, string> = {
@@ -96,10 +96,7 @@ export async function POST(req: NextRequest) {
         text: script,
         voiceId,
         languageCode,
-        model: model || "bulbul:v3",
-        pace: pace ? Number(pace) : 1.0,
-        pitch: pitch !== undefined ? Number(pitch) : 0,
-        loudness: loudness ? Number(loudness) : 1.0,
+        model: "bulbul:v3",
       });
 
       // Save audio file to UploadThing

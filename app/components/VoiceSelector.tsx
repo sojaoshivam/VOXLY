@@ -3,6 +3,13 @@
 import { VOICES_V3, VOICE_CATEGORIES, VoiceCategory } from '@/lib/sarvam';
 import { useMemo, useEffect, useState, useRef } from 'react';
 import { useTheme } from '@/app/components/theme';
+import { Rocket, BookOpen, Briefcase } from 'lucide-react';
+
+const CATEGORY_ICONS: Record<string, any> = {
+  Rocket,
+  BookOpen,
+  Briefcase
+};
 
 interface VoiceSelectorProps {
   language: string;
@@ -147,7 +154,10 @@ export function VoiceSelector({ language, value, onChange }: VoiceSelectorProps)
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <span style={{ fontSize: 32 }}>{category.icon}</span>
+                {(() => {
+                  const Icon = CATEGORY_ICONS[category.icon as string];
+                  return Icon ? <Icon size={32} strokeWidth={1.5} /> : <span style={{ fontSize: 32 }}>{category.icon}</span>;
+                })()}
                 <div>
                   <div style={{
                     fontSize: 14,

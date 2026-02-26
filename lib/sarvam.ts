@@ -4,7 +4,7 @@ export interface SarvamVoice {
   id: string;
   name: string;
   gender: "male" | "female";
-  model: "bulbul:v2" | "bulbul:v3";
+  model: "bulbul:v3";
   category?: string;
   supportedLanguages?: string[];
 }
@@ -25,21 +25,21 @@ export const VOICE_CATEGORIES: VoiceCategoryDefinition[] = [
     id: "motivational",
     name: "Motivational",
     description: "Optimistic, energetic, inspiring",
-    icon: "🚀",
+    icon: "Rocket",
     color: "#ec4899"
   },
   {
     id: "storytelling",
     name: "Storytelling",
     description: "Narrative, engaging, dramatic",
-    icon: "📖",
+    icon: "BookOpen",
     color: "#f59e0b"
   },
   {
     id: "serious",
     name: "Serious",
     description: "Professional, authoritative",
-    icon: "💼",
+    icon: "Briefcase",
     color: "#3b82f6"
   }
 ];
@@ -66,10 +66,7 @@ export const VOICES_V3: SarvamVoice[] = [
   { id: "sunny", name: "Sunny", gender: "male", model: "bulbul:v3", category: "motivational", supportedLanguages: ['english', 'hindi', 'hinglish'] },
 ];
 
-// ─── Drop bulbul:v2 (only use v3) ───
-export const VOICES_V2: SarvamVoice[] = [];
-
-export const ALL_VOICES = [...VOICES_V3, ...VOICES_V2];
+export const ALL_VOICES = [...VOICES_V3];
 
 const sarvamClient = axios.create({
   baseURL: process.env.SARVAM_API_BASE || "https://api.sarvam.ai/api/v1",
@@ -83,65 +80,51 @@ export interface GenerateAudioOptions {
   text: string;
   voiceId: string;
   languageCode: string; // e.g., 'en-IN', 'hi-IN'
-  model: "bulbul:v2" | "bulbul:v3";
-  pace?: number;
-  pitch?: number;
-  loudness?: number;
+  model?: "bulbul:v3";
 }
 
 export async function generateAudio(options: GenerateAudioOptions): Promise<Buffer> {
-  const { text, voiceId, languageCode, model, pace = 1.0, pitch = 0, loudness = 1.0 } = options;
+  const { text, voiceId, languageCode } = options;
 
   // Sarvam has a 500 character limit per request
-  // Split text into chunks of max 450 chars (for safety) at word boundaries
   const CHUNK_SIZE = 450;
   const chunks: string[] = [];
 
+  // Bug-proof strict chunking logic that guarantees no chunk exceeds CHUNK_SIZE
   if (text.length <= CHUNK_SIZE) {
     chunks.push(text);
   } else {
-    // Split by newlines first (paragraph breaks)
-    let buffer = '';
-    const lines = text.split('\n');
+    // Split text into tokens (words and punctuation)
+    // This regex splits on spaces but keeps the spaces, so we don't lose them
+    const tokens = text.match(/\S+|\s+/g) || [];
+    let currentChunk = "";
 
-    for (const line of lines) {
-      // If adding this line would exceed limit, push current buffer and start new one
-      if (buffer.length + line.length + 1 > CHUNK_SIZE) {
-        if (buffer) chunks.push(buffer.trim());
-        buffer = '';
-      }
-
-      // If a single line is still too long, split by words
-      if (line.length > CHUNK_SIZE) {
-        if (buffer) chunks.push(buffer.trim());
-        buffer = '';
-
-        const words = line.split(/\s+/);
-        let wordBuffer = '';
-        for (const word of words) {
-          if (word.length > CHUNK_SIZE) {
-            // Unlikely, but just in case a single word is overly long
-            if (wordBuffer) chunks.push(wordBuffer.trim());
-            wordBuffer = '';
-            for (let j = 0; j < word.length; j += CHUNK_SIZE) {
-              chunks.push(word.slice(j, j + CHUNK_SIZE));
-            }
-          } else if (wordBuffer.length + word.length + 1 > CHUNK_SIZE) {
-            if (wordBuffer) chunks.push(wordBuffer.trim());
-            wordBuffer = word;
-          } else {
-            wordBuffer += (wordBuffer ? ' ' : '') + word;
-          }
-        }
-        if (wordBuffer) chunks.push(wordBuffer.trim());
+    for (const token of tokens) {
+      if (currentChunk.length + token.length <= CHUNK_SIZE) {
+        currentChunk += token;
       } else {
-        // Line fits, add to buffer
-        buffer += (buffer ? '\n' : '') + line;
+        // If the current chunk is not empty, push it
+        if (currentChunk.trim().length > 0) {
+          chunks.push(currentChunk.trim());
+        }
+        currentChunk = "";
+
+        // If a single token (like a giant URL without spaces) is somehow larger than CHUNK_SIZE
+        if (token.length > CHUNK_SIZE) {
+          let remainder = token;
+          while (remainder.length > 0) {
+            chunks.push(remainder.slice(0, CHUNK_SIZE));
+            remainder = remainder.slice(CHUNK_SIZE);
+          }
+        } else {
+          currentChunk = token;
+        }
       }
     }
 
-    // Push any remaining buffer
-    if (buffer) chunks.push(buffer.trim());
+    if (currentChunk.trim().length > 0) {
+      chunks.push(currentChunk.trim());
+    }
   }
 
   console.log(`📝 Chunking text into ${chunks.length} parts (total: ${text.length} chars)`);
@@ -160,19 +143,11 @@ export async function generateAudio(options: GenerateAudioOptions): Promise<Buff
       inputs: [chunk],
       target_language_code: languageCode,
       speaker: voiceId,
-      pace: pace,
-      model: model,
+      model: "bulbul:v3",
       speech_sample_rate: 24000,
+      enable_preprocessing: true,
+      temperature: 0.3,
     };
-
-    if (model === "bulbul:v2") {
-      payload.pitch = pitch;
-      payload.loudness = loudness;
-      payload.enable_preprocessing = false;
-    } else if (model === "bulbul:v3") {
-      payload.enable_preprocessing = true;
-      payload.temperature = 0.3;
-    }
 
     try {
       const response = await sarvamClient.post("/text-to-speech", payload);

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Check, X } from "lucide-react";
 import { C, typography } from "./theme";
 import { Reveal } from "./UI";
 
@@ -162,10 +163,9 @@ export function Pricing() {
             {/* Cards grid */}
             <div style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
                 gap: 20,
                 alignItems: "start",
-            }} className="grid-3">
+            }} className="pricing-grid">
                 {plans.map((plan, i) => (
                     <Reveal key={i} delay={i * 0.1}>
                         <PricingCard plan={plan} yearly={yearly} />
@@ -188,8 +188,9 @@ export function Pricing() {
             </Reveal>
 
             <style>{`
-                @media (max-width: 860px) {
-                    .pricing-grid { grid-template-columns: 1fr !important; max-width: 440px; margin: 0 auto; }
+                .pricing-grid { grid-template-columns: repeat(3, 1fr); }
+                @media (max-width: 900px) {
+                    .pricing-grid { grid-template-columns: 1fr !important; max-width: 440px; margin: 0 auto; gap: 32px !important; }
                 }
             `}</style>
         </section>
@@ -325,16 +326,9 @@ function PricingCard({ plan, yearly }: { plan: typeof plans[0]; yearly: boolean 
                                 : "1px solid rgba(255,255,255,0.08)",
                         }}>
                             {f.included ? (
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                                    stroke={isHighlight ? "#ec4899" : "#22c55e"} strokeWidth="3">
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
+                                <Check size={10} color={isHighlight ? "#ec4899" : "#22c55e"} strokeWidth={3} />
                             ) : (
-                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none"
-                                    stroke="rgba(255,255,255,0.2)" strokeWidth="2.5">
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
+                                <X size={8} color="rgba(255,255,255,0.2)" strokeWidth={2.5} />
                             )}
                         </span>
                         <span style={{

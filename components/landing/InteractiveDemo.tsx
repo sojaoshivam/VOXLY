@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { Mic, Zap, Play, Pause, Lock, Headphones, Globe } from "lucide-react";
 import { typography } from "./theme";
 import { Reveal } from "./UI";
 
@@ -59,9 +60,9 @@ function ProgressRing({ pct, color, size = 64 }: { pct: number; color: string; s
 }
 
 const TABS = [
-    { lang: "Hindi", flag: "🇮🇳", color: "#ec4899" },
-    { lang: "Hinglish", flag: "🔥", color: "#f97316" },
-    { lang: "English", flag: "🌐", color: "#8b5cf6" },
+    { lang: "Hindi", icon: <Globe className="w-4 h-4" />, color: "#ec4899" },
+    { lang: "Hinglish", icon: <Globe className="w-4 h-4" />, color: "#f97316" },
+    { lang: "English", icon: <Globe className="w-4 h-4" />, color: "#8b5cf6" },
 ];
 
 const EXAMPLES = [
@@ -203,14 +204,14 @@ export function InteractiveDemo() {
 
                 {/* Header */}
                 <Reveal>
-                    <div style={{ marginBottom: 64 }}>
+                    <div style={{ marginBottom: 64 }} className="demo-header-container">
                         <p style={{
                             fontSize: 11, color: "#ec4899", textTransform: "uppercase",
                             letterSpacing: "0.18em", fontWeight: 700, marginBottom: 18,
                         }}>
                             Live demo
                         </p>
-                        <div style={{ display: "flex", alignItems: "flex-end", gap: 16, flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", alignItems: "flex-end", gap: 16, flexWrap: "wrap" }} className="demo-header-title">
                             <h2 style={{
                                 fontFamily: typography.serif,
                                 fontSize: "clamp(36px, 5vw, 56px)",
@@ -284,17 +285,17 @@ export function InteractiveDemo() {
                         </div>
 
                         {/* Main grid */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 300px" }} className="demo-grid">
+                        <div style={{ display: "grid", gap: 0 }} className="demo-grid">
 
                             {/* ── LEFT: Input panel ── */}
-                            <div style={{ padding: "32px 36px", borderRight: "1px solid rgba(255,255,255,0.07)" }}>
+                            <div className="demo-panel-left" style={{ padding: "32px 36px", borderRight: "1px solid rgba(255,255,255,0.07)" }}>
 
                                 {/* Language tabs */}
-                                <div style={{ marginBottom: 24 }}>
+                                <div style={{ marginBottom: 24 }} className="demo-center-mobile">
                                     <p style={{ fontSize: 11, color: "#4b5563", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600, marginBottom: 10 }}>
                                         Language
                                     </p>
-                                    <div style={{ display: "flex", gap: 6 }}>
+                                    <div style={{ display: "flex", gap: 6 }} className="demo-controls">
                                         {TABS.map((tab, i) => (
                                             <button
                                                 key={i}
@@ -311,7 +312,7 @@ export function InteractiveDemo() {
                                                     boxShadow: activeTab === i ? `0 2px 12px ${tab.color}20` : "none",
                                                 }}
                                             >
-                                                <span style={{ fontSize: 14 }}>{tab.flag}</span>
+                                                <span>{tab.icon}</span>
                                                 {tab.lang}
                                             </button>
                                         ))}
@@ -385,11 +386,11 @@ export function InteractiveDemo() {
                                 </div>
 
                                 {/* Tone selector */}
-                                <div style={{ marginBottom: 28 }}>
+                                <div style={{ marginBottom: 28 }} className="demo-center-mobile">
                                     <p style={{ fontSize: 11, color: "#4b5563", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600, marginBottom: 10 }}>
                                         Tone
                                     </p>
-                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }} className="demo-controls">
                                         {TONES.map(o => (
                                             <button
                                                 key={o}
@@ -451,13 +452,13 @@ export function InteractiveDemo() {
                             </div>
 
                             {/* ── RIGHT: Output panel ── */}
-                            <div style={{
+                            <div className="demo-panel-right" style={{
                                 padding: "32px 28px",
                                 display: "flex", flexDirection: "column",
                                 background: "rgba(0,0,0,0.2)",
                                 gap: 0,
                             }}>
-                                <p style={{ fontSize: 11, color: "#4b5563", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600, marginBottom: 28 }}>
+                                <p className="demo-center-mobile" style={{ fontSize: 11, color: "#4b5563", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600, marginBottom: 28 }}>
                                     Output
                                 </p>
 
@@ -500,13 +501,13 @@ export function InteractiveDemo() {
                                             }}
                                         >
                                             {generating ? (
-                                                <span style={{ fontSize: 22 }}>⚡</span>
+                                                <Zap className="w-6 h-6 text-white" fill="currentColor" />
                                             ) : generated ? (
                                                 playing
-                                                    ? <span style={{ width: 16, height: 16, background: "white", borderRadius: 3 }} />
-                                                    : <svg width="20" height="20" viewBox="0 0 24 24" fill={TABS[activeTab].color}><path d="M5 3l14 9-14 9V3z" /></svg>
+                                                    ? <Pause className="w-5 h-5 text-white" fill="currentColor" strokeWidth={0} />
+                                                    : <Play className="w-5 h-5 text-white ml-0.5" fill="currentColor" strokeWidth={0} />
                                             ) : (
-                                                <span style={{ fontSize: 22, opacity: 0.3 }}>🎙️</span>
+                                                <Mic className="w-6 h-6 text-white opacity-40" />
                                             )}
                                         </button>
                                     </div>
@@ -594,9 +595,9 @@ export function InteractiveDemo() {
                 <Reveal delay={0.2}>
                     <div style={{ display: "flex", justifyContent: "center", gap: 36, marginTop: 32, flexWrap: "wrap" }}>
                         {[
-                            { icon: "🔒", text: "No sign-up for preview" },
-                            { icon: "🎧", text: "Studio HD quality" },
-                            { icon: "⚡", text: "Under 10 seconds" },
+                            { icon: <Lock className="w-4 h-4" />, text: "No sign-up for preview" },
+                            { icon: <Headphones className="w-4 h-4" />, text: "Studio HD quality" },
+                            { icon: <Zap className="w-4 h-4" />, text: "Under 10 seconds" },
                         ].map((item, i) => (
                             <span key={i} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "#374151", fontWeight: 500 }}>
                                 <span>{item.icon}</span>
@@ -623,8 +624,18 @@ export function InteractiveDemo() {
                     0%   { transform: translateX(-100%); }
                     100% { transform: translateX(200%); }
                 }
-                @media (max-width: 720px) {
+                @media (max-width: 900px) {
                     .demo-grid { grid-template-columns: 1fr !important; }
+                    .demo-grid > div:last-child { border-left: none !important; border-top: 1px solid rgba(255,255,255,0.07); border-right: none !important; }
+                    .demo-grid > div:first-child { border-right: none !important; }
+                    
+                    .demo-panel-left { padding: 32px 20px !important; }
+                    .demo-panel-right { padding: 32px 20px !important; }
+                    .demo-header-title { justify-content: center !important; flex-direction: column; align-items: center !important; gap: 8px !important; }
+                    .demo-header-container { text-align: center !important; }
+                    .demo-header-container p { margin-left: auto; margin-right: auto; }
+                    .demo-controls { justify-content: center !important; flex-wrap: wrap !important; }
+                    .demo-center-mobile { text-align: center !important; }
                 }
             `}</style>
         </section>

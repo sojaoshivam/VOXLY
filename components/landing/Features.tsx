@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { Mic, Waves, Globe, Zap, Check } from "lucide-react";
 import { C, typography } from "./theme";
 import { Reveal } from "./UI";
 
@@ -8,7 +9,7 @@ const features = [
         no: "01",
         title: "No mic. No setup.",
         body: "Just paste your script and go. No recording booth, no equipment, no excuses. Your whole studio lives in a browser tab.",
-        icon: "🎙️",
+        icon: <Mic className="w-5 h-5" />,
         stat: "0 equipment",
         statLabel: "needed",
         color: "#ec4899",
@@ -19,7 +20,7 @@ const features = [
         no: "02",
         title: "Natural pacing.",
         body: "AI tuned specifically to Instagram short-form. Breaths, pauses, emphasis — all dialed in so it never sounds robotic.",
-        icon: "🌊",
+        icon: <Waves className="w-5 h-5" />,
         stat: "98%",
         statLabel: "natural rating",
         color: "#8b5cf6",
@@ -30,7 +31,7 @@ const features = [
         no: "03",
         title: "Hindi & Hinglish.",
         body: "Native accent that sounds like the creator, not a call center. Natively supports 12 Indian languages with regional nuance.",
-        icon: "🇮🇳",
+        icon: <Globe className="w-5 h-5" />,
         stat: "12",
         statLabel: "languages",
         color: "#f97316",
@@ -41,7 +42,7 @@ const features = [
         no: "04",
         title: "10-second turnaround.",
         body: "Script in. Studio-quality MP3 out. Download and drop it straight into CapCut — done before your chai gets cold.",
-        icon: "⚡",
+        icon: <Zap className="w-5 h-5" />,
         stat: "< 10s",
         statLabel: "per voiceover",
         color: "#22c55e",
@@ -78,7 +79,7 @@ function MicVisual() {
                     transition: "box-shadow 0.7s ease",
                     position: "relative", zIndex: 1,
                 }}>
-                    🎙️
+                    <Mic className="w-7 h-7 text-white" />
                 </div>
             </div>
         </div>
@@ -179,7 +180,7 @@ function SpeedVisual() {
                     color: done ? "#22c55e" : "white",
                     transition: "all 0.3s ease",
                 }}>
-                    {done ? "✓" : `${pct}%`}
+                    {done ? <Check className="w-5 h-5" strokeWidth={3} /> : `${pct}%`}
                 </div>
             </div>
             <span style={{ fontSize: 11, color: "#4b5563", letterSpacing: "0.1em", textTransform: "uppercase" }}>

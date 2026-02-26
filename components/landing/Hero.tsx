@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, ReactNode } from "react";
+import { Mic, Zap, Globe, Play, Pause, Check } from "lucide-react";
 import { C, typography } from "./theme";
 import { Waveform } from "./UI";
 
@@ -98,7 +99,7 @@ function MeshGrid() {
 /* ─── Floating stat cards ─── */
 function StatCard({ style, icon, value, label, delay }: {
     style?: React.CSSProperties;
-    icon: string; value: string; label: string; delay: number;
+    icon: ReactNode; value: string; label: string; delay: number;
 }) {
     return (
         <div style={{
@@ -114,7 +115,7 @@ function StatCard({ style, icon, value, label, delay }: {
             animation: `fadeUp 0.7s ease ${delay}s forwards`,
             boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
             ...style,
-        }}>
+        }} className="hero-stat-card">
             <span style={{ fontSize: 22 }}>{icon}</span>
             <div>
                 <p style={{ fontSize: 15, fontWeight: 700, color: "white", margin: 0, lineHeight: 1.2 }}>{value}</p>
@@ -225,17 +226,17 @@ export function Hero() {
 
                 {/* ── Floating stat cards ── */}
                 <StatCard
-                    icon="🎙️" value="10,000+" label="reels this month"
+                    icon={<Mic className="w-5 h-5 text-[#f0eeea]" />} value="10,000+" label="reels this month"
                     delay={1.0}
                     style={{ top: "8%", right: "2%", animation: `fadeUp 0.7s ease 1s forwards, floatCard 5s ease-in-out 1.7s infinite alternate` }}
                 />
                 <StatCard
-                    icon="⚡" value="< 10s" label="generation time"
+                    icon={<Zap className="w-5 h-5 text-[#f0eeea]" />} value="< 10s" label="generation time"
                     delay={1.15}
                     style={{ bottom: "22%", right: "0%", animation: `fadeUp 0.7s ease 1.15s forwards, floatCard 6s ease-in-out 1.85s infinite alternate` }}
                 />
                 <StatCard
-                    icon="🌐" value="12 langs" label="supported"
+                    icon={<Globe className="w-5 h-5 text-[#f0eeea]" />} value="12 langs" label="supported"
                     delay={1.3}
                     style={{ top: "28%", left: "-2%", animation: `fadeUp 0.7s ease 1.3s forwards, floatCard 4.5s ease-in-out 2s infinite alternate` }}
                 />
@@ -370,8 +371,8 @@ export function Hero() {
                                 flexShrink: 0,
                             }}>
                                 {playing
-                                    ? <span style={{ width: 9, height: 9, background: "#ec4899", borderRadius: 2 }} />
-                                    : <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M5 3l14 9-14 9V3z" /></svg>
+                                    ? <Pause className="w-3.5 h-3.5 text-[#ec4899]" fill="currentColor" />
+                                    : <Play className="w-3.5 h-3.5 text-white ml-0.5" fill="currentColor" />
                                 }
                             </span>
                             {playing ? "Pause Demo" : "Hear a Sample"}
@@ -407,7 +408,7 @@ export function Hero() {
                                         boxShadow: playing ? "0 4px 16px rgba(236,72,153,0.5)" : "none",
                                         transition: "box-shadow 0.3s",
                                     }}>
-                                        🎙️
+                                        <Mic className="w-5 h-5 text-white" />
                                     </div>
                                     <div>
                                         <p style={{ fontSize: 13, fontWeight: 600, color: "white", margin: 0 }}>Demo Voiceover</p>
@@ -460,7 +461,9 @@ export function Hero() {
                             { label: "Ready in 10 seconds", icon: "✓" },
                         ].map((item, i) => (
                             <span key={i} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "#4b5563", fontWeight: 500 }}>
-                                <span style={{ color: "#22c55e", fontWeight: 800, fontSize: 14 }}>{item.icon}</span>
+                                <span style={{ color: "#22c55e", display: "flex", alignItems: "center" }}>
+                                    <Check className="w-4 h-4" strokeWidth={3} />
+                                </span>
                                 {item.label}
                             </span>
                         ))}
@@ -489,6 +492,9 @@ export function Hero() {
                 @keyframes pulse {
                     0%, 100% { opacity: 1; }
                     50%      { opacity: 0.7; }
+                }
+                @media (max-width: 900px) {
+                    .hero-stat-card { display: none !important; }
                 }
             `}</style>
         </>

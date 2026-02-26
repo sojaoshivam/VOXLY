@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { Star } from "lucide-react";
 import { C, typography } from "./theme";
 import { Reveal } from "./UI";
 
@@ -157,14 +158,13 @@ export function Testimonials() {
                 {/* Cards */}
                 <div style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(3, 1fr)",
                     gap: 20,
                     transition: `opacity 0.38s ease, transform 0.38s ease`,
                     opacity: animating ? 0 : 1,
                     transform: animating
                         ? `translateX(${dir === "left" ? "-24px" : "24px"})`
                         : "translateX(0)",
-                }} className="grid-3">
+                }} className="testimonial-grid">
                     {visible.map((t, i) => (
                         <TestimonialCard key={`${active}-${i}`} t={t} i={i} />
                     ))}
@@ -186,9 +186,13 @@ export function Testimonials() {
                 </div>
 
                 <style>{`
+                    .testimonial-grid { grid-template-columns: repeat(3, 1fr); }
                     @keyframes progressShrink {
                         from { transform: scaleX(1); transform-origin: left; }
                         to   { transform: scaleX(0); transform-origin: left; }
+                    }
+                    @media (max-width: 900px) {
+                        .testimonial-grid { grid-template-columns: 1fr !important; }
                     }
                 `}</style>
             </div>
@@ -241,9 +245,7 @@ function TestimonialCard({ t, i }: { t: typeof testimonials[0]; i: number }) {
                 </span>
                 <div style={{ display: "flex", gap: 2 }}>
                     {[...Array(5)].map((_, k) => (
-                        <svg key={k} width="12" height="12" viewBox="0 0 24 24" fill="#f97316">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                        </svg>
+                        <Star key={k} className="w-3 h-3 text-[#f97316]" fill="currentColor" strokeWidth={0} />
                     ))}
                 </div>
             </div>

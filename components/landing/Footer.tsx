@@ -212,7 +212,6 @@ export function Footer() {
                 {/* ── Top section: logo + newsletter + columns ── */}
                 <div style={{
                     display: "grid",
-                    gridTemplateColumns: "280px 1fr",
                     gap: 80,
                     marginBottom: 64,
                     alignItems: "start",
@@ -270,9 +269,8 @@ export function Footer() {
                     {/* Links + socials grid */}
                     <div style={{
                         display: "grid",
-                        gridTemplateColumns: "1fr 1fr 1fr",
                         gap: 40,
-                    }}>
+                    }} className="footer-links-grid">
 
                         {/* Product */}
                         <div>
@@ -411,11 +409,14 @@ export function Footer() {
                     0%, 100% { opacity: 1; }
                     50%      { opacity: 0.4; }
                 }
+                .footer-top { grid-template-columns: 280px 1fr; }
+                .footer-links-grid { grid-template-columns: 1fr 1fr 1fr; }
                 @media (max-width: 900px) {
                     .footer-top { grid-template-columns: 1fr !important; gap: 48px !important; }
                     .footer-stats { grid-template-columns: repeat(2, 1fr) !important; }
                 }
-                @media (max-width: 520px) {
+                @media (max-width: 600px) {
+                    .footer-links-grid { grid-template-columns: 1fr 1fr !important; gap: 32px !important; }
                     .footer-stats { grid-template-columns: 1fr 1fr !important; }
                 }
             `}</style>
