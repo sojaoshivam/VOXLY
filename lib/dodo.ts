@@ -181,12 +181,15 @@ export function verifyWebhookSignature(
   }
 
   try {
-    // Svix signature format: "v1,BASE64_HASH"
-    if (!signature.startsWith("v1,")) {
-      console.error("Webhook: Unsupported signature version");
+    // Svix signature format: "v1,BASE64_HASH v1,BASE64_HASH ..."
+    const signatures = signature.split(" ").map(s => s.trim()).filter(s => s.startsWith("v1,"));
+
+    if (signatures.length === 0) {
+      console.error("Webhook: Unsupported or missing signature version (expected v1)");
       return false;
     }
-    const actualSignature = signature.substring(3);
+
+    const actualSignatures = signatures.map(s => s.substring(3));
 
     // Svix secrets often start with "whsec_"
     if (secret.startsWith("whsec_")) {
@@ -200,12 +203,12 @@ export function verifyWebhookSignature(
     hmac.update(toSign);
     const expectedBase64 = hmac.digest("base64");
 
-    const isValid = actualSignature === expectedBase64;
+    const isValid = actualSignatures.includes(expectedBase64);
 
     if (!isValid) {
       console.error("Webhook: Svix signature mismatch.");
       console.error(`  Expected: ${expectedBase64}`);
-      console.error(`  Received: ${actualSignature}`);
+      console.error(`  Received base64 signatures: ${actualSignatures.join(", ")}`);
     }
     return isValid;
   } catch (err) {
