@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { Webhook } from "svix";
 import { prisma } from "./db";
 import { getSubscriptionExpiry } from "./utils";
 
@@ -181,38 +182,19 @@ export function verifyWebhookSignature(
   }
 
   try {
-    // Svix signature format: "v1,BASE64_HASH v1,BASE64_HASH ..."
-    const signatures = signature.split(" ").map(s => s.trim()).filter(s => s.startsWith("v1,"));
+    const wh = new Webhook(secret);
 
-    if (signatures.length === 0) {
-      console.error("Webhook: Unsupported or missing signature version (expected v1)");
-      return false;
-    }
+    // The Svix Webhook class expects the exact raw string body
+    // and an object containing the required headers
+    wh.verify(body, {
+      "svix-id": id,
+      "svix-timestamp": timestamp,
+      "svix-signature": signature,
+    });
 
-    const actualSignatures = signatures.map(s => s.substring(3));
-
-    // Svix secrets often start with "whsec_"
-    if (secret.startsWith("whsec_")) {
-      secret = secret.substring(6);
-    }
-    const secretBuffer = Buffer.from(secret, 'base64');
-
-    // Svix string to sign: webhook-id + "." + webhook-timestamp + "." + body
-    const toSign = `${id}.${timestamp}.${body}`;
-    const hmac = crypto.createHmac("sha256", secretBuffer);
-    hmac.update(toSign);
-    const expectedBase64 = hmac.digest("base64");
-
-    const isValid = actualSignatures.includes(expectedBase64);
-
-    if (!isValid) {
-      console.error("Webhook: Svix signature mismatch.");
-      console.error(`  Expected: ${expectedBase64}`);
-      console.error(`  Received base64 signatures: ${actualSignatures.join(", ")}`);
-    }
-    return isValid;
+    return true;
   } catch (err) {
-    console.error("Webhook: Signature verification crash:", err);
+    console.error("Webhook: Svix verification failed:", err);
     return false;
   }
 }
