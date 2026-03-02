@@ -28,7 +28,7 @@ export function getProductIdForPlan(plan: string): string | null {
 
 // ─── Webhook Handling ─────────────────────────────────────────────────────────
 // Dodo sends a POST to /api/webhooks/dodo-payment when payment succeeds.
-export async function handlePaymentWebhook(payload: any): Promise<boolean> {
+export async function handlePaymentWebhook(payload: any): Promise<{ success: boolean; ignored?: boolean; error?: string }> {
   try {
     // Dodo webhook payload structure
     const eventType = payload.type || payload.event;
@@ -38,12 +38,16 @@ export async function handlePaymentWebhook(payload: any): Promise<boolean> {
       eventType === "payment.succeeded" ||
       eventType === "payment_succeeded" ||
       eventType === "payment.successful" ||
+      eventType === "subscription.active" ||
+      eventType === "subscription.created" ||
+      eventType === "checkout.session.completed" ||
       data?.status === "succeeded" ||
-      data?.status === "paid";
+      data?.status === "paid" ||
+      data?.status === "active";
 
     if (!isSuccess) {
       console.log("Webhook event ignored (not a success event):", eventType);
-      return false;
+      return { success: true, ignored: true };
     }
 
     // Extract customer email and plan from payload
@@ -79,13 +83,13 @@ export async function handlePaymentWebhook(payload: any): Promise<boolean> {
     if (!customerEmail) {
       console.error("Webhook: missing customer email in payload");
       console.log("Full data for debugging:", JSON.stringify(data, null, 2));
-      return false;
+      return { success: false, error: "Missing email" };
     }
 
     if (!["creator", "pro"].includes(plan)) {
       console.error("Webhook: could not determine plan. Plan detected:", plan);
       console.log("Full data for debugging:", JSON.stringify(data, null, 2));
-      return false;
+      return { success: false, error: "Invalid plan" };
     }
 
     // Find user (case-insensitive to be safe)
@@ -99,7 +103,7 @@ export async function handlePaymentWebhook(payload: any): Promise<boolean> {
     });
     if (!user) {
       console.error("Webhook: user not found for email:", customerEmail);
-      return false;
+      return { success: false, error: "User not found" };
     }
 
     // Upgrade user's subscription tier
@@ -129,10 +133,10 @@ export async function handlePaymentWebhook(payload: any): Promise<boolean> {
     });
 
     console.log(`✅ Upgraded ${customerEmail} to ${plan} plan`);
-    return true;
+    return { success: true };
   } catch (err) {
     console.error("handlePaymentWebhook error:", err);
-    return false;
+    return { success: false, error: String(err) };
   }
 }
 

@@ -44,18 +44,18 @@ export async function POST(req: NextRequest) {
 
     console.log("🧪 TEST: Simulating webhook payload:", JSON.stringify(mockPayload, null, 2));
 
-    const success = await handlePaymentWebhook(mockPayload);
+    const result = await handlePaymentWebhook(mockPayload);
 
-    if (success) {
+    if (result.success) {
       console.log("✅ TEST: Webhook simulation succeeded");
       return NextResponse.json({
         success: true,
         message: `User ${email} upgraded to ${plan} plan`,
       });
     } else {
-      console.log("❌ TEST: Webhook simulation failed");
+      console.log("❌ TEST: Webhook simulation failed:", result.error);
       return NextResponse.json(
-        { error: "Webhook processing failed - check logs" },
+        { error: "Webhook processing failed: " + result.error },
         { status: 400 }
       );
     }

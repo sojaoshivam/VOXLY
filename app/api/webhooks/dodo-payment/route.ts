@@ -27,15 +27,19 @@ export async function POST(req: NextRequest) {
     const payload = JSON.parse(body);
     console.log("Dodo webhook received:", JSON.stringify(payload, null, 2));
 
-    const success = await handlePaymentWebhook(payload);
+    const result = await handlePaymentWebhook(payload);
 
-    if (success) {
-      console.log("✅ Webhook processed successfully");
-      return NextResponse.json({ success: true });
+    if (result.success) {
+      if (result.ignored) {
+        console.log("ℹ️ Webhook processed successfully (ignored event)");
+      } else {
+        console.log("✅ Webhook processed successfully");
+      }
+      return NextResponse.json({ success: true, ignored: result.ignored });
     } else {
-      console.log("❌ Webhook processing returned false - check logs above");
+      console.log("❌ Webhook processing failed:", result.error || "Unknown error");
       return NextResponse.json(
-        { error: "Payment not processed (check logs)" },
+        { error: result.error || "Payment not processed" },
         { status: 400 }
       );
     }
