@@ -22,19 +22,19 @@ export async function POST(req: NextRequest) {
 
     if (!paymentLink) {
       return NextResponse.json(
-        { error: `Payment link not configured for ${plan} plan. Set DODO_${plan.toUpperCase()}_PAYMENT_LINK in .env.local` },
+        { error: `Payment link for ${plan} plan is not configured.` },
         { status: 500 }
       );
     }
 
-    // Append customer email and plan metadata as query params
     const checkoutUrl = new URL(paymentLink);
     checkoutUrl.searchParams.set("email", session.user.email);
-    checkoutUrl.searchParams.set("metadata[plan]", plan);
+    checkoutUrl.searchParams.set("metadata_plan", plan);
 
-    // Add return url to redirect to dashboard after payment
+    // Add redirect url to redirect to dashboard after payment
     const origin = req.headers.get("origin") || req.nextUrl.origin;
     checkoutUrl.searchParams.set("return_url", `${origin}/dashboard`);
+    checkoutUrl.searchParams.set("redirect_url", `${origin}/dashboard`);
 
     return NextResponse.json({
       checkoutUrl: checkoutUrl.toString(),

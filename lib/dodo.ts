@@ -15,6 +15,17 @@ export const PLAN_PRICES: Record<string, number> = {
   pro: 599,
 };
 
+export function getProductIdForPlan(plan: string): string | null {
+  const link = plan === "creator"
+    ? process.env.DODO_CREATOR_PAYMENT_LINK
+    : process.env.DODO_PRO_PAYMENT_LINK;
+
+  if (!link) return null;
+  // Extracts 'pdt_0NZ...' out of https://test.checkout.dodopayments.com/buy/pdt_xyz?quantity=1
+  const match = link.match(/pdt_[a-zA-Z0-9]+/);
+  return match ? match[0] : null;
+}
+
 // ─── Webhook Handling ─────────────────────────────────────────────────────────
 // Dodo sends a POST to /api/webhooks/dodo-payment when payment succeeds.
 export async function handlePaymentWebhook(payload: any): Promise<boolean> {
