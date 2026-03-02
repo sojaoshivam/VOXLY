@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
 
     const checkoutUrl = new URL(paymentLink);
     checkoutUrl.searchParams.set("email", session.user.email);
+    checkoutUrl.searchParams.set("customer_email", session.user.email);
     checkoutUrl.searchParams.set("metadata_plan", plan);
 
     // Add redirect url to redirect to dashboard after payment

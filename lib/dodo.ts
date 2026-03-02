@@ -37,6 +37,7 @@ export async function handlePaymentWebhook(payload: any): Promise<boolean> {
     const isSuccess =
       eventType === "payment.succeeded" ||
       eventType === "payment_succeeded" ||
+      eventType === "payment.successful" ||
       data?.status === "succeeded" ||
       data?.status === "paid";
 
@@ -52,8 +53,8 @@ export async function handlePaymentWebhook(payload: any): Promise<boolean> {
       payload.customer_email;
 
     // Plan detection logic
-    const productId = data?.product_id || data?.items?.[0]?.product_id;
-    const metadataPlan = data?.metadata?.plan || payload?.metadata?.plan;
+    const productId = data?.product_id || data?.items?.[0]?.product_id || data?.line_items?.[0]?.product_id;
+    const metadataPlan = data?.metadata?.plan || payload?.metadata?.plan || data?.metadata?.metadata_plan || payload?.metadata?.metadata_plan;
     const amount = data?.amount || data?.total_amount || payload?.amount;
 
     let plan: string = metadataPlan;
@@ -77,6 +78,7 @@ export async function handlePaymentWebhook(payload: any): Promise<boolean> {
 
     if (!customerEmail) {
       console.error("Webhook: missing customer email in payload");
+      console.log("Full data for debugging:", JSON.stringify(data, null, 2));
       return false;
     }
 
@@ -86,8 +88,15 @@ export async function handlePaymentWebhook(payload: any): Promise<boolean> {
       return false;
     }
 
-    // Find user
-    const user = await prisma.user.findUnique({ where: { email: customerEmail } });
+    // Find user (case-insensitive to be safe)
+    const user = await prisma.user.findFirst({
+      where: {
+        email: {
+          equals: customerEmail,
+          mode: "insensitive"
+        }
+      }
+    });
     if (!user) {
       console.error("Webhook: user not found for email:", customerEmail);
       return false;
