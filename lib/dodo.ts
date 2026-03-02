@@ -80,6 +80,8 @@ export async function handlePaymentWebhook(payload: any): Promise<{ success: boo
       payload?.payment_id ||
       `dodo-${Date.now()}`;
 
+    const customerId = data?.customer_id || payload?.customer_id || data?.customer?.customer_id;
+
     if (!customerEmail) {
       console.error("Webhook: missing customer email in payload");
       console.log("Full data for debugging:", JSON.stringify(data, null, 2));
@@ -92,13 +94,10 @@ export async function handlePaymentWebhook(payload: any): Promise<{ success: boo
       return { success: false, error: "Invalid plan" };
     }
 
-    // Find user (case-insensitive to be safe)
+    // Find user using lowercase for efficient B-tree index usage
     const user = await prisma.user.findFirst({
       where: {
-        email: {
-          equals: customerEmail,
-          mode: "insensitive"
-        }
+        email: customerEmail.toLowerCase()
       }
     });
     if (!user) {
@@ -107,13 +106,18 @@ export async function handlePaymentWebhook(payload: any): Promise<{ success: boo
     }
 
     // Upgrade user's subscription tier
+    const userUpdateData: any = {
+      subscriptionTier: plan,
+      subscriptionEndsAt: getSubscriptionExpiry(),
+    };
+
+    if (customerId) {
+      userUpdateData.dodoCustomerId = customerId;
+    }
+
     await prisma.user.update({
       where: { id: user.id },
-      data: {
-        subscriptionTier: plan,
-        subscriptionEndsAt: getSubscriptionExpiry(),
-        dodoCustomerId: paymentId,
-      },
+      data: userUpdateData,
     });
 
     // Record payment (upsert to handle duplicate webhook events)

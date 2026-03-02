@@ -10,9 +10,9 @@ export async function POST(req: NextRequest) {
     req.headers.forEach((val, key) => { headerObj[key] = val; });
     console.log("Webhook Headers:", JSON.stringify(headerObj, null, 2));
 
-    const signature = req.headers.get("webhook-signature") || req.headers.get("x-webhook-signature") || "";
-    const timestamp = req.headers.get("webhook-timestamp") || req.headers.get("x-webhook-timestamp") || "";
-    const id = req.headers.get("webhook-id") || req.headers.get("x-webhook-id") || "";
+    const signature = req.headers.get("svix-signature") || req.headers.get("webhook-signature") || req.headers.get("x-webhook-signature") || "";
+    const timestamp = req.headers.get("svix-timestamp") || req.headers.get("webhook-timestamp") || req.headers.get("x-webhook-timestamp") || "";
+    const id = req.headers.get("svix-id") || req.headers.get("webhook-id") || req.headers.get("x-webhook-id") || "";
 
     // In development/test mode, be lenient with signature verification
     const isDevMode = process.env.NODE_ENV === "development";
